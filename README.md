@@ -13,7 +13,9 @@ Required Python version: `Python==3.10.20`
 Please run the following command to replicate the environment:
 
 `conda create -n dementia python=3.10`
+
 `conda activate dementia`
+
 `pip install -r requirements.txt`
 
 `Randomly generated data/importance_tabpfn.csv:`
