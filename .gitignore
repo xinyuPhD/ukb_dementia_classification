@@ -1,7 +1,7 @@
-# 忽略整个data文件夹
+# gnore the entire data folder
 data/
 
-# 忽略所有CSV/Parquet/数据文件
+# Ignore all CSV/Parquet/data files
 *.csv
 *.parquet
 *.h5
@@ -11,7 +11,7 @@ data/
 *.xlsx
 *.xls
 
-# 忽略模型文件、日志、结果
+# Ignore model files, logs, and results
 models/
 logs/
 results/
@@ -19,7 +19,7 @@ results/
 *.pth
 *.ckpt
 
-# Python环境相关
+# Python environment related
 __pycache__/
 *.pyc
 .venv/
