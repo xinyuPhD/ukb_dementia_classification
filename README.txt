@@ -8,9 +8,15 @@
 
 `model_tabpfn.py`: The Tabfn model was used to classify dementia, trained using data from England and geographically validated using data from Scotland and Wales.
 
-所需要的Python版本：Python==3.10.20
+Required Python version：Python==3.10.20
 
-请您运行以下命令来复刻环境：
+Please run the following command to replicate the environment:
 conda create -n dementia python=3.10
 conda activate dementia
 pip install -r requirements.txt
+
+Randomly generated data/importance_tabpfn.csv：
+It contains the top 20 most important features and their specific values.
+
+Randomly generated data/sample_data.csv:
+UKB's sample anonymized data is randomly generated; please replace it with your actual data when running the program.
