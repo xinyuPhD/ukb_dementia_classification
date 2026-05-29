@@ -63,11 +63,8 @@ def compare_windows(model, win1, win2, folder):
     }
 
 
-# In[3]:
-
-
 windows = ['0-2_years', '0-4_years', '0-6_years']
-window_pairs = list(combinations(windows, 2)) # 生成 (0-2 vs 0-4), (0-2 vs 0-6), (0-4 vs 0-6)
+window_pairs = list(combinations(windows, 2))
 folders = ['AUC_results_internal_England', 'AUC_results_external_Validation']
 models = [
     'Only_wearable', 'Only_all_primary', 'Top1_+_wearable', 'Top5_+_wearable', 
@@ -83,35 +80,26 @@ for folder in folders:
             if res:
                 final_results.append(res)
 
-# 保存并输出
 df = pd.DataFrame(final_results)
-df.to_csv('./统计分析/DeLong_Window_Comparison.csv', index=False, encoding='utf-8-sig')
+df.to_csv('./Statistical analysis/DeLong_Window_Comparison.csv', index=False, encoding='utf-8-sig')
 print(df.head(10))
 
 def perform_pairwise_delong(folder_path):
-    """
-    对指定文件夹下的所有 .npz 文件进行两两 AUC 对比
-    """
-    # 获取目录下所有 .npz 文件名
     files = [f for f in os.listdir(folder_path) if f.endswith('.npz')]
     results = []
 
-    # 获取文件夹类型（内部或外部）
     folder_type = 'Internal' if 'AUC_result' in folder_path else 'External'
 
-    # 生成两两组合
     for file1, file2 in combinations(files, 2):
         path1 = os.path.join(folder_path, file1)
         path2 = os.path.join(folder_path, file2)
 
-        # 加载数据并计算指标
         d1 = np.load(path1, allow_pickle=True)
         auc1, var1 = get_auc_and_variance(d1['y_true'], d1['y_probs'])
 
         d2 = np.load(path2, allow_pickle=True)
         auc2, var2 = get_auc_and_variance(d2['y_true'], d2['y_probs'])
 
-        # Z 检验 (DeLong 简化版)
         diff = auc1 - auc2
         se = np.sqrt(var1 + var2)
 
@@ -122,7 +110,6 @@ def perform_pairwise_delong(folder_path):
             z = diff / se
             p_value = 2 * (1 - stats.norm.cdf(np.abs(z)))
 
-        # 整理结果，去掉文件名后缀作为模型名
         results.append({
             'Type': folder_type,
             'Model_A': file1.replace('.npz', ''),
@@ -137,35 +124,30 @@ def perform_pairwise_delong(folder_path):
     return pd.DataFrame(results)
 
 if __name__ == "__main__":
-    # 定义目录路径
     internal_dir = 'AUC_result'
     external_dir = 'AUC_exteral_result'
 
     all_comparison_results = []
 
-    # 处理内部验证集
     if os.path.exists(internal_dir):
-        print(f"正在处理: {internal_dir}...")
+        print(f"Processing : {internal_dir}...")
         df_internal = perform_pairwise_delong(internal_dir)
         all_comparison_results.append(df_internal)
     else:
-        print(f"未找到目录: {internal_dir}")
+        print(f"Directory not found : {internal_dir}")
 
-    # 处理外部验证集
     if os.path.exists(external_dir):
-        print(f"正在处理: {external_dir}...")
+        print(f"Processing : {external_dir}...")
         df_external = perform_pairwise_delong(external_dir)
         all_comparison_results.append(df_external)
     else:
-        print(f"未找到目录: {external_dir}")
+        print(f"Directory not found : {external_dir}")
 
-    # 合并并输出结果
     if all_comparison_results:
         final_df = pd.concat(all_comparison_results, ignore_index=True)
 
-        # 打印结果预览
-        print("\n--- 德龙检验 (DeLong Test) 两两对比结果 ---")
+        print("\n--- DeLong Test Pairwise comparison results ---")
         print(final_df.to_string())
 
-        final_df.to_csv("./统计分析/delong_test_summary.csv", index=False, encoding='utf-8-sig')
-        print("\n结果已保存至 delong_test_summary.csv")
+        final_df.to_csv("./Statistical analysis/delong_test_summary.csv", index=False, encoding='utf-8-sig')
+        print("\nThe results have been saved to delong_test_summary.csv")

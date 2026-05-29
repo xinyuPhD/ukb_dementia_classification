@@ -2,30 +2,27 @@ import pandas as pd
 import os
 import re
 import numpy as np
-from scipy.stats import skew, kurtosis  # 用于计算偏度、峰度
+from scipy.stats import skew, kurtosis
 
 INPUT_DIR = "/data_hou/wangxinyu/accelerometer_data/processed_acc_data/"
 OUTPUT_PATH = "./new_accelerometer_feature_results.csv"
-MIN_ROWS = 5760  # 1天（30秒采样）所需最小数据行数
-DAY_START_HOUR = 6  # 白天起始小时（6:00）
-DAY_END_HOUR = 22  # 白天结束小时（22:00）
-SEDENTARY_THRESHOLD = 60  # 久坐超30分钟所需连续点数（30分钟/30秒=60点）
+MIN_ROWS = 5760  # one天
+DAY_START_HOUR = 6  # （6:00）
+DAY_END_HOUR = 22  #（22:00）
+SEDENTARY_THRESHOLD = 60
 
 NUMERIC_COLS = ["acc", "MET", "light", "moderate", "vigorous"]
-# 活动类型列（用于计算活动占比）
 ACTIVITY_COLS = ["sedentary", "sleep", "light", "moderate-vigorous", "CpSB", "CpLPA", "CpMPA", "CpVPA", "CpMVPA"]
 
 def extract_eid_from_filename(filename):
-    """从文件名提取前7位eid"""
-    match = re.match(r'^(\d{7})', filename)  # 匹配开头7位数字
+    match = re.match(r'^(\d{7})', filename)
     if match:
         return match.group(1)
     else:
-        return None  # 若无法提取eid，标记为None
+        return None
 
 
 def filter_file_by_length(df):
-    """根据数据行数筛选文件（≥2880行为1天）"""
     return len(df) >= MIN_ROWS
 
 
@@ -45,30 +42,27 @@ def process_time_and_daynight(df):
 
 
 def calculate_basic_stat_features(df):
-    """计算基础时域统计特征"""
     features = {}
 
     for col in NUMERIC_COLS:
         if col not in df.columns:
-            continue  # 若列不存在，跳过
+            continue
         col_data = df[col].dropna()
         if len(col_data) == 0:
             continue
-        
-        # 集中趋势
+
         features[f"{col}_mean"] = col_data.mean()
         features[f"{col}_median"] = col_data.median()
-        # 离散程度
+
         features[f"{col}_std"] = col_data.std()
         features[f"{col}_var"] = col_data.var()
         features[f"{col}_iqr"] = col_data.quantile(0.75) - col_data.quantile(0.25)
-        # 分布特征
-        features[f"{col}_skew"] = skew(col_data)  # 偏度
-        features[f"{col}_kurtosis"] = kurtosis(col_data)  # 峰度
+
+        features[f"{col}_skew"] = skew(col_data)
+        features[f"{col}_kurtosis"] = kurtosis(col_data)
         features[f"{col}_25pct"] = col_data.quantile(0.25)
         features[f"{col}_75pct"] = col_data.quantile(0.75)
         features[f"{col}_90pct"] = col_data.quantile(0.90)
-        # 极值特征
         features[f"{col}_max"] = col_data.max()
         features[f"{col}_min"] = col_data.min()
         features[f"{col}_range"] = col_data.max() - col_data.min()
@@ -77,26 +71,24 @@ def calculate_basic_stat_features(df):
     for col in ACTIVITY_COLS:
         if col not in df.columns:
             continue
-        activity_count = df[col].sum()  # 活动为1的次数
-        features[f"{col}_ratio"] = activity_count / total_rows  # 时间占比
+        activity_count = df[col].sum()
+        features[f"{col}_ratio"] = activity_count / total_rows
     
     return features
 
 
 def calculate_daynight_met_diff(df):
     features = {}
-    # 白天MET均值
+
     daytime_met = df[df["is_daytime"] == 1]["MET"].mean()
-    # 夜间MET均值
+
     nighttime_met = df[df["is_daytime"] == 0]["MET"].mean()
-    
-    # 昼夜MET均值比（避免夜间均值为0导致除以0）
+
     if nighttime_met > 0:
         features["daynight_met_ratio"] = daytime_met / nighttime_met
     else:
-        features["daynight_met_ratio"] = np.nan  # 夜间无数据时标记为NaN
-    
-    # 额外补充昼夜MET绝对值差异
+        features["daynight_met_ratio"] = np.nan
+
     features["daynight_met_diff"] = daytime_met - nighttime_met
     return features
 
@@ -128,27 +120,27 @@ def calculate_trend(df, col):
     x = np.arange(len(col_data))
     y = col_data.values
     slope, intercept = np.polyfit(x, y, 1)
-    return slope  # 返回斜率作为趋势
+    return slope
 
 def calculate_sleep_duration(df):
     if "sleep" not in df.columns:
         return {"sleep_duration": np.nan}
     sleep_data = df["sleep"].astype(int)
-    sleep_duration = sleep_data.sum() * 30  # 每个点代表30秒
+    sleep_duration = sleep_data.sum() * 30
     return {"sleep_duration": sleep_duration}
 
 def calculate_sedentary_duration(df):
     if "sedentary" not in df.columns:
         return {"sedentary_duration": np.nan}
     sedentary_data = df["sedentary"].astype(int)
-    sedentary_duration = sedentary_data.sum() * 30  # 每个点代表30秒
+    sedentary_duration = sedentary_data.sum() * 30
     return {"sedentary_duration": sedentary_duration}
 
 def calculate_activity_duration(df, activity_col):
     if activity_col not in df.columns:
         return {f"{activity_col}_duration": np.nan}
     activity_data = df[activity_col].astype(int)
-    activity_duration = activity_data.sum() * 30  # 每个点代表30秒
+    activity_duration = activity_data.sum() * 30
     return {f"{activity_col}_duration": activity_duration}
 
 def calculate_max_slope(df, col):
@@ -161,24 +153,22 @@ def calculate_max_slope(df, col):
     return np.max(np.abs(slopes))
 
 def main():
-    # 初始化结果列表（存储每个eid的特征）
     all_features = []
-    # 获取目录下所有CSV文件
     csv_files = [f for f in os.listdir(INPUT_DIR) if f.endswith(".csv")]
     
-    print(f"发现{len(csv_files)}个CSV文件，开始处理...")
+    print(f"Found {len(csv_files)} csv files，Start processing...")
     for idx, filename in enumerate(csv_files, 1):
         try:
             eid = extract_eid_from_filename(filename)
             if not eid:
-                print(f"跳过文件{filename}：无法提取eid")
+                print(f"Skip file {filename}：Unable to extract eid")
                 continue
 
             file_path = os.path.join(INPUT_DIR, filename)
             df = pd.read_csv(file_path)
 
             if not filter_file_by_length(df):
-                print(f"跳过文件{filename}（eid:{eid}）：数据行数{len(df)}<{MIN_ROWS}（1天）")
+                print(f"Skip file {filename}（eid:{eid}）：Number of data rows {len(df)}<{MIN_ROWS}（1 day）")
                 continue
 
             df = process_time_and_daynight(df)
@@ -186,7 +176,7 @@ def main():
             basic_features = calculate_basic_stat_features(df)
             daynight_features = calculate_daynight_met_diff(df)
             sedentary_features = calculate_sedentary_streaks(df)
-            # 计算时序和活动相关特征
+
             autocorrelation_features = {f"acc_autocorr_{lag}": calculate_autocorrelation(df, "acc", lag) for lag in [1, 5, 10]}
             trend_features = {f"acc_trend": calculate_trend(df, "acc")}
             sleep_duration_features = calculate_sleep_duration(df)
@@ -197,7 +187,7 @@ def main():
             combined_features = {
                 "eid": eid,
                 "filename": filename,
-                "total_rows": len(df)  # 记录实际数据行数
+                "total_rows": len(df)
             }
             combined_features.update(basic_features)
             combined_features.update(daynight_features)
@@ -212,24 +202,22 @@ def main():
             all_features.append(combined_features)
 
             if idx % 100 == 0:
-                print(f"已处理{idx}/{len(csv_files)}个文件，累计有效文件{len(all_features)}个")
+                print(f"Processed {idx}/{len(csv_files)} files，Cumulative valid documents {len(all_features)}")
         
         except Exception as e:
-            print(f"处理文件{filename}时出错：{str(e)}，跳过该文件")
+            print(f"Processing files {filename} error：{str(e)}，Skip this file")
             continue
 
     if all_features:
-        # 转换为DataFrame
         result_df = pd.DataFrame(all_features)
-        # 保存为CSV
         result_df.to_csv(OUTPUT_PATH, index=False, encoding="utf-8")
-        print(f"\n处理完成！共处理{len(csv_files)}个文件，有效文件{len(all_features)}个")
-        print(f"特征结果已保存至：{OUTPUT_PATH}")
-        # 打印前5行预览
-        print("\n特征结果预览（前5行）：")
+        print(f"\nProcessing complete! A total of {len(csv_files)} files were processed, with {len(all_features)} valid files.")
+        print(f"Feature results have been saved to: {OUTPUT_PATH}")
+        # Preview of the first 5 lines
+        print("\nPreview of feature results (first 5 lines):")
         print(result_df.head())
     else:
-        print("\n处理完成，但未找到符合条件的有效文件（数据行数≥2880）")
+        print("\nProcessing complete, but no valid files matching the criteria were found (data rows ≥ 2880)")
 
 if __name__ == "__main__":
     main()

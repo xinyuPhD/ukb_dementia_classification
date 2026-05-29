@@ -1,13 +1,10 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-plt.rcParams['font.sans-serif'] = ['DejaVu Sans']  # 全英文无衬线字体
-plt.rcParams['axes.unicode_minus'] = False          # 解决负号显示问题
+plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
+plt.rcParams['axes.unicode_minus'] = False
 plt.rcParams['font.family'] = 'sans-serif'
 plt.rcParams['figure.dpi'] = 100
-
-
-# ### 特征重要性画图
 
 importance_tabpfn = pd.read_csv("./importance_tabpfn.csv")
 
@@ -23,7 +20,7 @@ importance_tabpfn['new_names'] = new_names
 
 fig, ax = plt.subplots(figsize=(12, 14))
 top20_df_sorted = importance_tabpfn.iloc[::-1]
-# 渐变色条（从浅到深）
+
 colors = plt.cm.viridis(top20_df_sorted['Importance_Mean'] / top20_df_sorted['Importance_Mean'].max())
 bars = ax.barh(
     y=top20_df_sorted['new_names'],
@@ -51,11 +48,9 @@ ax.tick_params(axis='x', labelsize=11)
 ax.tick_params(axis='y', labelsize=10)
 ax.set_xlim(right=top20_df_sorted['Importance_Mean'].max() * 1.15)
 plt.tight_layout()
-plt.savefig('../图片/xgb_top20_feature_importance.png', dpi=300, bbox_inches='tight')
+plt.savefig('../picture/xgb_top20_feature_importance.png', dpi=300, bbox_inches='tight')
 plt.show()
 
-
-# ### 内外部验证的AUC对比图
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -71,7 +66,7 @@ models1 = [
     {"name": "Accelerometer-derived features + top 20 selected variables", "file": "./AUC_result/Wearable-derived features + top 20 selected variables.npz"},
     {"name": "Accelerometer-derived features + all primary care–feasible variables", "file": "./AUC_result/wearable-derived features + all primary care–feasible variables.npz"},
 ]
-# 定义两组模型列表
+
 models2 = [
     {"name": "Only accelerometer-derived features", "file": "./AUC_exteral_result//results_wearable_only.npz"},
     {"name": "Only all primary care–feasible variables", "file": "./AUC_exteral_result/Only all primary care–feasible variables.npz"},
@@ -127,18 +122,16 @@ fig.legend(handles=lines,
            fontsize=9,
            frameon=False)
 
-plt.savefig('../图片/AUC_test_ext.png', dpi=400, bbox_inches='tight')
+plt.savefig('../picture/AUC_test_ext.png', dpi=400, bbox_inches='tight')
 plt.show()
 
-
-# ### Brier Score 绘制
 
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.calibration import calibration_curve
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import brier_score_loss
-from scipy.special import logit  # 用于计算 slope 和 intercept
+from scipy.special import logit
 
 
 def calculate_metrics_ci(y_true, y_probs, n_bootstraps=1000, seed=42):
@@ -150,7 +143,7 @@ def calculate_metrics_ci(y_true, y_probs, n_bootstraps=1000, seed=42):
 
 
     y_probs_clipped = np.clip(y_probs, 1e-10, 1 - 1e-10)
-    lp = logit(y_probs_clipped) # 线性预测值 (Linear Predictor)
+    lp = logit(y_probs_clipped)
 
     for i in range(n_bootstraps):
         indices = rng.randint(0, len(y_true), len(y_true))
@@ -164,13 +157,12 @@ def calculate_metrics_ci(y_true, y_probs, n_bootstraps=1000, seed=42):
         # A. Brier Score
         bs_scores.append(brier_score_loss(y_boot, p_boot))
 
-        lr = LogisticRegression(solver='lbfgs', C=1e10) # C很大代表不加正则化
+        lr = LogisticRegression(solver='lbfgs', C=1e10)
         lr.fit(lp_boot, y_boot)
 
         slope_scores.append(lr.coef_[0][0])
         intercept_scores.append(lr.intercept_[0])
 
-    # 计算统计结果
     def get_ci(data):
         return np.mean(data), np.percentile(data, 2.5), np.percentile(data, 97.5)
 
@@ -181,7 +173,6 @@ def calculate_metrics_ci(y_true, y_probs, n_bootstraps=1000, seed=42):
     }
     return res
 
-# 模型定义与路径配置
 models1 = [
     {"name": "Only accelerometer-derived features", "file": "./AUC_result/results_wearable_only.npz"},
     {"name": "Only all primary care–feasible variables", "file": "./AUC_result/Only all primary care–feasible variables.npz"},
@@ -257,10 +248,9 @@ fig.legend(handles=legend_lines, labels=[m["name"] for m in models1],
            ncol=2, fontsize=9, frameon=False)
 
 plt.tight_layout(rect=[0, 0.18, 1, 0.95])
-plt.savefig('../图片/calibration_results_final.png', dpi=400, bbox_inches='tight')
+plt.savefig('../picture/calibration_results_final.png', dpi=400, bbox_inches='tight')
 plt.show()
 
-# ### 窗口Brier Score绘制
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -268,7 +258,7 @@ import string
 from sklearn.calibration import calibration_curve
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import brier_score_loss, roc_auc_score
-from scipy.special import logit # 用于计算 Slope 和 Intercept
+from scipy.special import logit
 
 def clean_and_flatten(input_data):
     if isinstance(input_data, (list, np.ndarray)) and len(input_data) > 0:
@@ -289,7 +279,7 @@ def calculate_all_metrics_ci(y_true, y_probs, n_bootstraps=1000, seed=42):
     y_true = y_true.astype(int)
 
     y_probs_clipped = np.clip(y_probs, 1e-10, 1 - 1e-10)
-    lp = logit(y_probs_clipped) # 线性预测值 (Linear Predictor)
+    lp = logit(y_probs_clipped)
 
     for i in range(n_bootstraps):
         indices = rng.randint(0, len(y_true), len(y_true))
@@ -349,7 +339,7 @@ legend_lines = []
 for row, d_cfg in enumerate(data_dirs):
     for col, win in enumerate(windows):
         ax = axes[row, col]
-        ax.plot([0, 1], [0, 1], "k--", lw=1, alpha=0.6) # 理想线
+        ax.plot([0, 1], [0, 1], "k--", lw=1, alpha=0.6)
 
         print(f"\n" + "="*50)
         print(f"Panel {string.ascii_uppercase[row*3+col]}: {d_cfg['title']} | Window: {win} Years")
@@ -416,14 +406,13 @@ fig.legend(handles=legend_lines,
            fontsize=10,
            frameon=False)
 
-plt.savefig('../图片/calibration_complete_metrics.png', dpi=400, bbox_inches='tight')
+plt.savefig('../picture/calibration_complete_metrics.png', dpi=400, bbox_inches='tight')
 plt.show()
-# ### DCA决策曲线
 
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
-# 概率校正函数---
+
 def perform_calibration(y_true, y_probs_raw, method='sigmoid'):
     y_probs_raw_reshed = y_probs_raw.reshape(-1, 1)
     lr = LogisticRegression(C=1e10, solver='lbfgs')
@@ -439,14 +428,11 @@ def calculate_net_benefit(y_true, y_probs, thresholds):
         if pt >= 1.0:
             net_benefits.append(0)
             continue
-        # 根据阈值生成二分类预测
         preds = (y_probs >= pt).astype(int)
 
-        # 计算 True Positives 和 False Positives
         tp = np.sum((preds == 1) & (y_true == 1))
         fp = np.sum((preds == 1) & (y_true == 0))
 
-        # 计算 Net Benefit
         nb = (tp / N) - (fp / N) * (pt / (1 - pt))
         net_benefits.append(nb)
 
@@ -503,7 +489,6 @@ for i, p in enumerate(panels):
     y_true_base = None
 
     for idx, m in enumerate(p["models"]):
-        # 加载数据
         data = np.load(m["file"])
         y_true, y_probs_raw = data['y_true'], data['y_probs']
 
@@ -526,7 +511,7 @@ for i, p in enumerate(panels):
         if i == 0:
             legend_lines.extend([line_all, line_none])
 
-    ax.set_xlim([0, 0.05]) # 与 thresholds 的上限一致
+    ax.set_xlim([0, 0.05])
 
     y_min = max(np.min(nb_treat_all) * 1.1, -0.01)
     y_max = np.max(nb_treat_all) * 1.2
@@ -537,24 +522,20 @@ for i, p in enumerate(panels):
     ax.set_title(p["title"], fontweight='bold', fontsize=14, loc='left')
     ax.grid(True, linestyle=':', alpha=0.5)
 
-# 添加图例
 fig.legend(handles=legend_lines, 
            labels=[m["name"] for m in models1] + ["Treat All", "Treat None"], 
            loc='lower center', bbox_to_anchor=(0.5, -0.05), 
            ncol=3, fontsize=10, frameon=False)
 
 plt.tight_layout(rect=[0, 0.05, 1, 0.95])
-plt.savefig('../图片/DCA_results_final.png', dpi=400, bbox_inches='tight')
+plt.savefig('../picture/DCA_results_final.png', dpi=400, bbox_inches='tight')
 plt.show()
-
-# ### 窗口DCA决策曲线
 
 import string
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 
-# 数据处理与概率校正函数
 def clean_and_flatten(input_data):
     if isinstance(input_data, (list, np.ndarray)) and len(input_data) > 0:
         try:
@@ -574,7 +555,6 @@ def perform_calibration(y_true, y_probs_raw):
     lr.fit(y_probs_raw_res, y_true)
     return lr.predict_proba(y_probs_raw_res)[:, 1]
 
-# 核心计算函数
 
 def calculate_net_benefit(y_true, y_probs, thresholds):
     net_benefits = []
@@ -603,8 +583,6 @@ def calculate_treat_all(y_true, thresholds):
             net_benefits.append(nb)
     return np.array(net_benefits)
 
-# 配置部分
-
 windows = ["0-2", "0-4", "0-6"]
 data_dirs = [
     {"title": "Internal Testing", "path": "./AUC_results_internal_England"},
@@ -629,13 +607,12 @@ for row, d_cfg in enumerate(data_dirs):
     for col, win in enumerate(windows):
         ax = axes[row, col]
 
-        # 根据不同时间窗口设定不同的阈值上限，以匹配相应的发病率
         if win == "0-2": display_limit = 0.015
         elif win == "0-4": display_limit = 0.025
         else: display_limit = 0.04
 
         thresholds = np.linspace(0.0001, display_limit, 100)
-        y_true_base = None # 用于记录计算 Treat All 的基础 y_true
+        y_true_base = None
 
         print(f"\n" + "="*50)
         print(f"Panel {string.ascii_uppercase[row*3+col]}: {d_cfg['title']} | Window: {win} Years")
@@ -678,7 +655,7 @@ for row, d_cfg in enumerate(data_dirs):
         ax.set_xlim([0, display_limit])
 
         if y_true_base is not None:
-            max_nb = np.max(calculate_treat_all(y_true_base, [0.0001])) # 近似全人群发病率
+            max_nb = np.max(calculate_treat_all(y_true_base, [0.0001]))
             ax.set_ylim([-max_nb * 0.25, max_nb * 1.3])
 
         ax.set_xlabel('Threshold Probability', fontsize=11)
@@ -707,10 +684,8 @@ fig.legend(handles=legend_lines,
            fontsize=11,
            frameon=False)
 
-plt.savefig('../图片/DCA_complete_6panels.png', dpi=400, bbox_inches='tight')
+plt.savefig('../picture/DCA_complete_6panels.png', dpi=400, bbox_inches='tight')
 plt.show()
-
-# ### 主模型净收益
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -796,21 +771,19 @@ for i, p in enumerate(panels):
         y_probs_cal = perform_calibration(y_true, y_probs_raw)
         net_benefit = calculate_net_benefit(y_true, y_probs_cal, thresholds)
 
-        avg_net_benefit = np.mean(net_benefit)  # 所有阈值净收益求平均
+        avg_net_benefit = np.mean(net_benefit)
         max_net_benefit = np.max(net_benefit)
-        # 打印结果
         print(f"\n{'='*60}")
-        print(f"数据集：{p['title']}")
-        print(f"模型：{m['name']}")
-        print(f"平均净收益 (所有阈值) = {avg_net_benefit:.6f}")
-        print(f"最大净收益 (最优阈值) = {max_net_benefit:.6f}")
+        print(f"Dataset：{p['title']}")
+        print(f"Model：{m['name']}")
+        print(f"Average net income (all thresholds) = {avg_net_benefit:.6f}")
+        print(f"Maximum net profit (optimal threshold) = {max_net_benefit:.6f}")
         print(f"{'='*60}")
         # ==================================================================
 
         line, = ax.plot(thresholds, net_benefit, lw=2, color=colors[idx], label=m["name"])
         if i == 0: legend_lines.append(line)
 
-    # 绘制基准线
     if y_true_base is not None:
         nb_treat_all = calculate_treat_all(y_true_base, thresholds)
         line_all, = ax.plot(thresholds, nb_treat_all, "k--", lw=1.5, label="Treat All")
@@ -818,7 +791,6 @@ for i, p in enumerate(panels):
         if i == 0:
             legend_lines.extend([line_all, line_none])
 
-    # 图表样式
     ax.set_xlim([0, 0.05])
     y_min = max(np.min(nb_treat_all) * 1.1, -0.01) 
     y_max = np.max(nb_treat_all) * 1.2
@@ -828,17 +800,15 @@ for i, p in enumerate(panels):
     ax.set_title(p["title"], fontweight='bold', fontsize=14, loc='left')
     ax.grid(True, linestyle=':', alpha=0.5)
 
-# 图例
 fig.legend(handles=legend_lines, 
            labels=[m["name"] for m in models1] + ["Treat All", "Treat None"], 
            loc='lower center', bbox_to_anchor=(0.5, -0.05), 
            ncol=3, fontsize=10, frameon=False)
 
 plt.tight_layout(rect=[0, 0.05, 1, 0.95])
-# plt.savefig('../图片/DCA_results_final.png', dpi=400, bbox_inches='tight')
+# plt.savefig('../picture/DCA_results_final.png', dpi=400, bbox_inches='tight')
 plt.show()
 
-# ### 窗口净收益
 
 import string
 import numpy as np
@@ -938,21 +908,18 @@ for row, d_cfg in enumerate(data_dirs):
                 if len(y_true) < 10: continue
                 if y_true_base is None: y_true_base = y_true
 
-                # 执行概率校正
                 y_probs_cal = perform_calibration(y_true, y_probs_raw)
 
-                # 计算 Net Benefit
                 net_benefit = calculate_net_benefit(y_true, y_probs_cal, thresholds)
 
                 avg_net_benefit = np.mean(net_benefit)
                 max_net_benefit = np.max(net_benefit)
 
-                print(f"模型: {m_cfg['name']}")
-                print(f"  ├─ 平均净收益 (Avg) = {avg_net_benefit:.6f}")
-                print(f"  └─ 最大净收益 (Max) = {max_net_benefit:.6f}")
+                print(f"Model: {m_cfg['name']}")
+                print(f"  ├─ Average net income (Avg) = {avg_net_benefit:.6f}")
+                print(f"  └─ Maximum net income (Max) = {max_net_benefit:.6f}")
                 print("-" * 70)
 
-                # 绘图
                 line, = ax.plot(thresholds, net_benefit, color=colors[i], lw=2, label=m_cfg["name"])
 
                 if row == 0 and col == 0:
@@ -1002,5 +969,5 @@ fig.legend(handles=legend_lines,
            fontsize=11,
            frameon=False)
 
-# plt.savefig('../图片/DCA_complete_6panels.png', dpi=400, bbox_inches='tight')
+# plt.savefig('../picture/DCA_complete_6panels.png', dpi=400, bbox_inches='tight')
 plt.show()
