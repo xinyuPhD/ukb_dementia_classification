@@ -1,0 +1,27 @@
+# 忽略整个data文件夹
+data/
+
+# 忽略所有CSV/Parquet/数据文件
+*.csv
+*.parquet
+*.h5
+*.pkl
+*.npy
+*.npz
+*.xlsx
+*.xls
+
+# 忽略模型文件、日志、结果
+models/
+logs/
+results/
+*.pt
+*.pth
+*.ckpt
+
+# Python环境相关
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
