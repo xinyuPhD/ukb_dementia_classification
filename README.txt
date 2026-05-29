@@ -1,9 +1,7 @@
-windows_tabpfn：主代码，包括只使用队列数据、队列+wearable等八个模型的运行和评估以及外部验证，
-top特征及其对应情况的数据已经被保存下来，直接读取即可。
+`windows_tabpfn`: Main code, including the running and evaluation of eight models using only queued data, queued + wearable models, etc., as well as external validation. The top features and their corresponding data have been saved and can be read directly.
 
-stat_fea.py：从加速度计数据中进行特征工程提取的代码，生成65个衍生特征。
+`stat_fea.py`: Code for feature engineering extraction from accelerometer data, generating 65 derived features.
 
-windows_tabpfn：分三个时间窗口（0-2,0-4,0-6）对只使用队列数据、队列+wearable等八个模型
-的运行和评估以及外部验证。
+`windows_tabpfn`: Running, evaluating, and externally validating the eight models using only queued data, queued + wearable models, etc., in three time windows (0-2, 0-4, 0-6).
 
-windows test.py：对每个窗口之间的不同模型进行AUC差异性检验，区分不同窗口的AUC值是否确实存在统计差异。
+`windows test.py`: Performs AUC difference tests on different models between each window to distinguish whether there are indeed statistically significant differences in AUC values ​​between different windows.
