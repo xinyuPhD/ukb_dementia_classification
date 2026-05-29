@@ -7,4 +7,3 @@
 `windows test.py`: Performs AUC difference tests on different models between each window to distinguish whether there are indeed statistically significant differences in AUC values ​​between different windows.
 
 `model_tabpfn.py`: The Tabfn model was used to classify dementia, trained using data from England and geographically validated using data from Scotland and Wales.
-
