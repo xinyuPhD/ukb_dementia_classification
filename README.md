@@ -1,5 +1,6 @@
 # Prediction of dementia risk using accelerometer-derived behavioural phenotypes: a population-based machine learning study
 
+## Project Structure
 `windows_tabpfn.py`: Main code, including the running and evaluation of eight models using only cohort data, cohort + wearable models, etc., as well as external validation. The top features and their corresponding data have been saved and can be read directly.
 
 `stat_fea.py`: Code for feature engineering extraction from accelerometer data, generating 65 derived features.
@@ -10,8 +11,11 @@
 
 `model_tabpfn.py`: The Tabfn model was used to classify dementia, trained using data from England and geographically validated using data from Scotland and Wales.
 
+## Environment Setup
+### Required Python Version
 Required Python version: `Python==3.10.20`
 
+### Installation Steps
 Please run the following command to replicate the environment:
 
 `conda create -n dementia python=3.10`
@@ -20,6 +24,7 @@ Please run the following command to replicate the environment:
 
 `pip install -r requirements.txt`
 
+## Data Description
 `Randomly generated data/importance_tabpfn.csv:`
 It contains the top 20 most important features and their specific values.
 
