@@ -1,4 +1,4 @@
-# Prediction of dementia risk using accelerometer-derived behavioural phenotypes: a population-based machine learning study
+# Prediction of dementia risk using accelerometer-derived behavioural phenotypes: a population-based machine learning study
 
 `windows_tabpfn.py`: Main code, including the running and evaluation of eight models using only cohort data, cohort + wearable models, etc., as well as external validation. The top features and their corresponding data have been saved and can be read directly.
 
