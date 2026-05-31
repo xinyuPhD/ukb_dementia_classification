@@ -30,3 +30,7 @@ It contains the top 20 most important features and their specific values.
 
 `Randomly generated data/sample_data.csv:`
 UKB's sample anonymized data is randomly generated; please replace it with your actual data when running the program.
+
+`Randomly generated data/ukb_accelerometer_data.csv:`
+After processing, each file contains accelerometer data representing one participant.
+If you want to reproduce this project, you should prepare multiple such files in one folder.
