@@ -6,7 +6,7 @@ from scipy.stats import skew, kurtosis
 
 INPUT_DIR = "/data_hou/wangxinyu/accelerometer_data/processed_acc_data/"
 OUTPUT_PATH = "./new_accelerometer_feature_results.csv"
-MIN_ROWS = 5760  # one天
+MIN_ROWS = 5760  # one day
 DAY_START_HOUR = 6  # （6:00）
 DAY_END_HOUR = 22  #（22:00）
 SEDENTARY_THRESHOLD = 60
